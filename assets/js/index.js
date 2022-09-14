@@ -2,8 +2,7 @@ isAuth = localStorage.getItem("isAuth");
 
 const homePage = `<div
 class="container-fluid bg-light d-flex justify-content-center align-items-center flex-column"
-style="height: 100vh"
->
+style="height: 100vh">
 <div class="card">
   <h class="card-header"><h1>Single Page Application</h1></h>
   <div class="card-body">
@@ -17,7 +16,8 @@ style="height: 100vh"
 </div>
 </div>`;
 
-const loginPage = `<div class="container d-flex justify-content-center align-items-center" style="height: 100vh;">
+const loginPage = `<div class="container d-flex justify-content-center align-items-center flex-column" style="height: 100vh;">
+<h1>Login</h1>
 <form id="loginForm" class="card p-3" style="width: 500px">
   <div class="form-group">
     <label for="email">Email address</label>
@@ -48,7 +48,8 @@ const loginPage = `<div class="container d-flex justify-content-center align-ite
 </div>`;
 
 const registerPage = `
-<div class="container d-flex justify-content-center align-items-center" style="height: 100vh;">
+<div class="container d-flex justify-content-center align-items-center flex-column"  style="height: 100vh;">
+<h1>Create a account</h1>
     <form id = "form" class="card p-3" style="width: 500px">
         <div class="form-group">
           <label for="fullName">Full Name</label>
@@ -101,47 +102,67 @@ const registerPage = `
     </div>`;
 
 const clickHandler = (button, Page) => {
-  document.getElementById(`${button}`).addEventListener("click", Page);
+  document.getElementById(button).addEventListener("click", Page);
 };
 
 const Home = () => {
   document.getElementById("root").innerHTML = homePage;
-  clickHandler(`loginButton`, Login);
-  clickHandler(`registerButton`, Register);
+  clickHandler("loginButton", Login);
+  clickHandler("registerButton", Register);
 };
 
 const Login = () => {
   document.getElementById("root").innerHTML = loginPage;
   const form = document.getElementById("loginForm");
-  console.log("i am here");
+  clickHandler("registerButton", Register);
+  clickHandler("home", Home);
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     passwordError();
     emailError();
+    const usersJson = JSON.parse(localStorage.getItem("users"));
     const email = document.getElementById("email").value;
     const password = document.getElementById("password").value;
+    let count = 0;
+    usersJson.forEach((user) => {
+      if (user.email === email) {
+        if (user.password === password) {
+          alert(`Welcome ${email}`);
+          localStorage.setItem("loggedName", user.fullName);
+          Main(user.fullName);
+        } else alert("password mismatched");
+      } else {
+        count++;
+      }
+    });
 
-    const storedEmail = localStorage.getItem("email");
-    const storedPassword = localStorage.getItem("password");
-
-    if (storedEmail === email && storedPassword === password) {
-      alert(`Welcome ${email}`);
-      Main();
-    } else if (emailError() === "passed" && passwordError() === "passed") {
-      alert("usermane or password missmatched");
+    if (count === usersJson.length) {
+      alert("username not found");
       document.getElementById("email").value = "";
       document.getElementById("password").value = "";
     }
-  });
 
-  clickHandler(`registerButton`, Register);
-  clickHandler(`home`, Home);
+    // const email = document.getElementById("email").value;
+    // const password = document.getElementById("password").value;
+
+    // const storedEmail = localStorage.getItem("email");
+    // const storedPassword = localStorage.getItem("password");
+
+    // if (storedEmail === email && storedPassword === password) {
+    //   alert(`Welcome ${email}`);
+    //   Main();
+    // } else if (emailError() === "passed" && passwordError() === "passed") {
+    //   alert("usermane or password missmatched");
+    //   document.getElementById("email").value = "";
+    //   document.getElementById("password").value = "";
+    // }
+  });
 };
 
 const Register = () => {
   document.getElementById("root").innerHTML = registerPage;
-  clickHandler(`loginButton`, Login);
-  clickHandler(`home`, Home);
+  clickHandler("loginButton", Login);
+  clickHandler("home", Home);
   form.addEventListener("submit", (e) => {
     e.preventDefault();
     passwordError();
@@ -150,27 +171,67 @@ const Register = () => {
     nameError();
 
     if (
-      nameError() === "passed" &&
-      emailError() === "passed" &&
-      confirmPasswordError() === "passed" &&
-      passwordError() === "passed"
+      nameError() &&
+      emailError() &&
+      confirmPasswordError() &&
+      passwordError()
     ) {
-      const fullName = document.getElementById("fullName").value;
-      localStorage.setItem("fullName", fullName);
-      const email = document.getElementById("email").value;
-      localStorage.setItem("email", email);
-      const password = document.getElementById("password").value;
-      localStorage.setItem("password", password);
+      // const fullName = document.getElementById("fullName").value;
+      // localStorage.setItem("fullName", fullName);
+      // const email = document.getElementById("email").value;
+      // localStorage.setItem("email", email);
+      // const password = document.getElementById("password").value;
+      // localStorage.setItem("password", password);
+
+      const inputs = document.querySelectorAll("input");
+      const usersJson = JSON.parse(localStorage.getItem("users"));
+      const user = usersJson ? usersJson : [];
+      const object = {};
+      console.log(
+        "🚀 ~ file: index.js ~ line 168 ~ form.addEventListener ~ object",
+        object
+      );
+
+      inputs.forEach((input) => {
+        const id = input.id;
+        const value = input.value;
+        object[id] = value;
+        console.log(
+          "🚀 ~ file: index.js ~ line 174 ~ input.addEventListener ~ value",
+          value
+        );
+      });
+      user.push(object);
+      localStorage.setItem("users", JSON.stringify(user));
       alert("Register Successful");
-      Login();
+      localStorage.setItem("loggedName", object.fullName);
+      Main(object.fullName);
+      localStorage.removeItem("register-form");
     }
   });
+  const inputs = document.querySelectorAll("input");
+  const loginFormObject = JSON.parse(localStorage.getItem("register-form"));
+  const object = loginFormObject ? loginFormObject : {};
+
+  inputs.forEach((input) => {
+    input.addEventListener("keyup", (e) => {
+      const id = e.target.id;
+      const value = e.target.value;
+      object[id] = value;
+      localStorage.setItem("register-form", JSON.stringify(object));
+    });
+  });
+
+  inputs.forEach(
+    (input) => (input.value = object[input.id] ? object[input.id] : "")
+  );
 };
-const Main = () => {
-  const fullName = localStorage.getItem("fullName");
+
+const Main = (welcomeName) => {
+  // const fullName = localStorage.getItem("fullName");
   document.getElementById("root").innerHTML = `
   <div class="d-flex justify-content-center align-items-center flex-column" style="height:100vh;">
-  <h3>Welcome, ${fullName}</h3>
+  <h3>Welcome, ${welcomeName}</h3>
   <button id="logoutButton" type="button" class="btn btn-outline-success mr-3">
   Log out
   </button>
@@ -179,6 +240,7 @@ const Main = () => {
   const isAuthRemove = () => {
     alert("Successfully Logged Out");
     localStorage.removeItem("isAuth");
+    localStorage.removeItem("loggedName");
     Home();
   };
   document
@@ -200,8 +262,8 @@ const passwordError = () => {
   ) {
     errorPassword.innerHTML = `There must be a number in password`;
   } else {
-    document.getElementById("errorPassword").innerHTML = ``;
-    return "passed";
+    document.getElementById("errorPassword").innerHTML = "";
+    return true;
   }
 };
 
@@ -216,8 +278,8 @@ const emailError = () => {
   } else if (!email.value.includes(".")) {
     errorEmailElement.innerHTML = `Email must contain .`;
   } else {
-    errorEmailElement.innerHTML = ``;
-    return "passed";
+    errorEmailElement.innerHTML = "";
+    return true;
   }
 };
 
@@ -230,8 +292,8 @@ const confirmPasswordError = () => {
     errorConfirmPasswordElement.innerHTML = `Both password doesnot match`;
     console.log("hello");
   } else {
-    errorConfirmPasswordElement.innerHTML = ``;
-    return "passed";
+    errorConfirmPasswordElement.innerHTML = "";
+    return true;
   }
 };
 
@@ -242,13 +304,13 @@ const nameError = () => {
     errorName.innerHTML = `Name field is empty`;
     console.log("hello");
   } else {
-    errorName.innerHTML = ``;
-    return "passed";
+    errorName.innerHTML = "";
+    return true;
   }
 };
 
 if (isAuth) {
-  Main();
+  Main(localStorage.getItem("loggedName"));
 } else {
   Home();
 }
